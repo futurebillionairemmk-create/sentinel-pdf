@@ -31,7 +31,7 @@ export const sanitizeAndFlatten = async (
         canvas.width = viewport.width;
 
         // Render page to canvas
-        await page.render({ canvas, viewport }).promise;
+        await page.render({ canvasContext: context, viewport, canvas: canvas }).promise;
 
         // Convert to JPEG (strips all interactive elements, layers, and scripts)
         const imgData = canvas.toDataURL('image/jpeg', 0.85);

@@ -1,51 +1,65 @@
-# Sentinel PDF 🛡️
+# 🛡️ Sentinel PDF
 
-**Sentinel PDF** is a high-security, browser-based PDF analysis and viewing tool designed to enforce a Zero Trust architecture for document handling. Unlike standard PDF viewers that parse content directly into the DOM, Sentinel analyzes files for malware signatures and heuristic anomalies before rendering them in a strictly isolated sandbox.
+**The Secure PDF Friend & Analyzer**
 
-## 🚀 Key Features
+Sentinel PDF is a security-focused tool designed to analyze, sanitize, and neutralize potentially malicious PDF documents. It leverages advanced heuristics and AI to detect threats without exposing the user to risk.
 
-### 1. Multi-Layer Threat Detection
-*   **Static Heuristics**: Scans raw binary data for suspicious PDF tags (e.g., `/JS`, `/OpenAction`, `/Launch`) that indicate malicious scripts or auto-execution behavior.
-*   **Threat Intelligence**: Integrates with the **VirusTotal API** to check file hashes against global antivirus databases.
-*   **AI Threat Explanation**: Uses **Google Gemini 2.5 Flash** to translate technical threat vectors into human-readable risk assessments.
+## 🌟 Features
 
-### 2. Sandboxed Rendering
-*   **Canvas-Based Output**: Uses `pdf.js` to rasterize pages onto an HTML5 `<canvas>`.
-*   **Zero-DOM Injection**: No PDF objects (fonts, forms, annotations) are added to the DOM, neutralizing XSS and DOM-based exploits.
-*   **Script Blocking**: JavaScript execution within the PDF is completely disabled.
+### 👻 Ghost-Protocol Sandbox
+- **Zero-Trust Rendering**: PDFs are rendered in a completely isolated, cross-origin iframe (`sandbox.html`).
+- **Script Blocking**: Strict logic prevents embedded JavaScript execution during rendering.
+- **Sanitize & Flatten**: Converts dynamic PDF content into a safe, flattened image stream, stripping all active payloads.
 
-### 3. Quarantine Logic
-*   **Risk Scoring**: Calculates a composite risk score (0-100) based on heuristics and reputation.
-*   **Auto-Quarantine**: Automatically locks access to files exceeding the risk threshold.
+### 🧠 JS Forensic Lab
+- **Heuristic Scanning**: scours PDF structure for suspicious elements (OpenAction, AA, JS).
+- **Script Extraction**: Automatically extracts hidden JavaScript for inspection.
+- **AI Analysis**: Integrates with Google Gemini to de-obfuscate and warn about malicious code snippets.
 
-## 🛠️ Tech Stack
+### 🌐 Cloud Intelligence
+- **VirusTotal Integration**: Checks file hashes against the VirusTotal database for known threats.
+- **AI Threat Synthesis**: Combines heuristic data with AI models to provide a human-readable risk assessment.
 
-*   **Frontend**: React 19, TypeScript
-*   **Styling**: Tailwind CSS
-*   **PDF Core**: `pdfjs-dist`
-*   **AI**: Google GenAI SDK (`@google/genai`)
-*   **Icons**: Lucide React
+## 🚀 Getting Started
 
-## ⚙️ Configuration
+### Prerequisites
+- Node.js (Latest LTS)
+- A Google Gemini API Key
 
-### Environment Variables
-To enable AI explanations, create a `.env` file (or configure your environment):
+### Installation
 
-```bash
-API_KEY=your_google_gemini_api_key
-```
+1.  **Clone the repository**
+    ```bash
+    git clone https://github.com/fbmmk/sentinel-pdf.git
+    cd sentinel-pdf
+    ```
 
-### In-App Settings
-Click the **Settings** tab in the UI to configure:
-1.  **VirusTotal API Key**: Required for live reputation checks.
-2.  **Mock Mode**: Simulates API responses for testing without consuming quotas.
-3.  **Quarantine Threshold**: Adjust the sensitivity of the automatic locking mechanism.
+2.  **Install dependencies**
+    ```bash
+    npm install
+    ```
 
-## 📦 Usage
+3.  **Environment Setup**
+    Create a `.env` file in the root directory:
+    ```env
+    GEMINI_API_KEY=your_api_key_here
+    ```
 
-1.  **Scan**: Upload a PDF. The system calculates SHA-256 hashes and runs local heuristics immediately.
-2.  **Review**: Check the Scan Dashboard for risk scores and specific threat indicators.
-3.  **View**: If safe, open the file in the "Secure Sandbox." This opens a modal where the PDF is rendered as pure pixels.
+4.  **Run Development Server**
+    ```bash
+    npm run dev
+    ```
 
-## ⚠️ Disclaimer
-While Sentinel PDF significantly reduces the attack surface, no security tool is 100% impenetrable. Always exercise caution with untrusted files.
+## 🏗️ Architecture
+
+- **Frontend**: React + Vite + TypeScript
+- **PDF Core**: PDF.js (Custom Worker Implementation)
+- **Styling**: TailwindCSS (via Utility Classes)
+- **Security**:
+    - `vite-env.d.ts` for safe type definitions.
+    - `sandbox.html` for isolated rendering.
+    - `sanitizer.ts` for flattening logic.
+
+## 📝 License
+
+MIT

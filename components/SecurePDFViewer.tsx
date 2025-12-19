@@ -14,7 +14,7 @@ interface Props {
 }
 
 export const SecurePDFViewer: React.FC<Props> = ({ file, onClose }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [pdfDoc, setPdfDoc] = useState<any>(null);
   const [pageNum, setPageNum] = useState(1);
   const [jumpVal, setJumpVal] = useState("1");
@@ -23,6 +23,7 @@ export const SecurePDFViewer: React.FC<Props> = ({ file, onClose }) => {
   const [metadata, setMetadata] = useState<any>(null);
   const [sanitizing, setSanitizing] = useState(false);
   const [sanProgress, setSanProgress] = useState(0);
+  const [fileBuffer, setFileBuffer] = useState<ArrayBuffer | null>(null);
 
   useEffect(() => {
     if (!file) return;
@@ -30,17 +31,19 @@ export const SecurePDFViewer: React.FC<Props> = ({ file, onClose }) => {
       setLoading(true);
       try {
         const arrayBuffer = await file.arrayBuffer();
+        setFileBuffer(arrayBuffer);
         const doc = await pdfjsLib.getDocument({
           data: arrayBuffer,
           disableFontFace: true,
           isEvalSupported: false,
-          stopAtErrors: true, // Fail fast on malformed files
+          stopAtErrors: true,
         }).promise;
         setPdfDoc(doc);
         const meta = await doc.getMetadata();
         setMetadata(meta);
-      } catch (err) {
-        console.error(err);
+      } catch (err: any) {
+        console.error("SENTINEL_VIEWER_LOAD_ERR:", err);
+        setLoading(false);
       } finally {
         setLoading(false);
       }
@@ -49,28 +52,48 @@ export const SecurePDFViewer: React.FC<Props> = ({ file, onClose }) => {
   }, [file]);
 
   useEffect(() => {
-    if (pdfDoc) renderPage(pageNum);
-  }, [pdfDoc, pageNum, scale]);
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === 'RENDER_SUCCESS') {
+        console.log("Sandbox rendered page successfully");
+      } else if (event.data.type === 'RENDER_ERROR') {
+        console.error("Sandbox render error:", event.data.error);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
-  const renderPage = async (num: number) => {
-    if (!pdfDoc || !canvasRef.current) return;
-    try {
-      const page = await pdfDoc.getPage(num);
-      const viewport = page.getViewport({ scale });
-      const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
-      if (!context) return;
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
-      await page.render({ canvasContext: context, viewport }).promise;
-    } catch (e) {
-      console.error("Render failed", e);
+  useEffect(() => {
+    if (fileBuffer && iframeRef.current) {
+      renderPage();
+    }
+  }, [fileBuffer, pageNum, scale]);
+
+  const renderPage = () => {
+    if (!fileBuffer || !iframeRef.current || !iframeRef.current.contentWindow) return;
+
+    // Ensure the iframe has loaded before sending the buffer
+    const send = () => {
+      iframeRef.current?.contentWindow?.postMessage({
+        type: 'RENDER',
+        data: fileBuffer,
+        pageNum,
+        scale
+      }, '*');
+    };
+
+    if (loading) {
+      setTimeout(send, 500); // Wait for load state to clear
+    } else {
+      send();
     }
   };
 
   const handleSanitize = async () => {
+    console.log("SENTINEL_DEBUG: Sanitization requested for", file?.name);
     if (!file) return;
     setSanitizing(true);
+    setSanProgress(0);
     try {
       const blob = await sanitizeAndFlatten(file, (p) => setSanProgress(p));
       const url = URL.createObjectURL(blob);
@@ -79,8 +102,9 @@ export const SecurePDFViewer: React.FC<Props> = ({ file, onClose }) => {
       a.download = `sanitized_${file.name}`;
       a.click();
       URL.revokeObjectURL(url);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Sanitization failed", err);
+      alert(`Sanitization Error: ${err.message || 'Unknown error'}`);
     } finally {
       setSanitizing(false);
       setSanProgress(0);
@@ -156,7 +180,7 @@ export const SecurePDFViewer: React.FC<Props> = ({ file, onClose }) => {
               </p>
               <button
                 onClick={handleSanitize}
-                disabled={sanitizing || !pdfDoc}
+                disabled={sanitizing || !file}
                 className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-600 rounded text-[10px] font-black uppercase tracking-[0.15em] flex items-center justify-center gap-2 transition shadow-lg shadow-emerald-600/10"
               >
                 {sanitizing ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
@@ -211,8 +235,15 @@ export const SecurePDFViewer: React.FC<Props> = ({ file, onClose }) => {
               <p className="font-mono text-sm text-emerald-400 animate-pulse uppercase tracking-widest">Parsing Structure...</p>
             </div>
           ) : (
-            <div className="shadow-[0_0_100px_rgba(0,0,0,0.8)] border-4 border-slate-800 bg-white">
-              <canvas ref={canvasRef} className="max-w-full h-auto" />
+            <div className="shadow-[0_0_100px_rgba(0,0,0,0.8)] border-4 border-slate-800 bg-white overflow-hidden rounded-sm">
+              <iframe
+                ref={iframeRef}
+                src="/sandbox.html"
+                className="w-[1000px] h-[1400px] border-none"
+                style={{ transform: `scale(${scale})`, transformOrigin: 'top center' }}
+                sandbox="allow-scripts"
+                title="Ghost-Protocol Sandbox"
+              />
             </div>
           )}
         </div>

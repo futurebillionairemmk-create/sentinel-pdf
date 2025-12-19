@@ -4,6 +4,7 @@ import { AppConfig, RiskLevel, ScanReport, HistoryItem } from './types.ts';
 import { calculateHash, calculateRiskScore, checkVirusTotal, runLocalHeuristics } from './services/scanner.ts';
 import { ScanDashboard } from './components/ScanDashboard.tsx';
 import { SecurePDFViewer } from './components/SecurePDFViewer.tsx';
+import { ErrorBoundary } from './components/ErrorBoundary.tsx';
 import { Settings, Shield, UploadCloud, Activity, LayoutTemplate, Database, AlertTriangle, Clock, ShieldCheck, Info } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -312,7 +313,9 @@ const App: React.FC = () => {
       </main>
 
       {viewMode === 'viewer' && (
-        <SecurePDFViewer file={currentFile} onClose={() => setViewMode('dashboard')} />
+        <ErrorBoundary>
+          <SecurePDFViewer file={currentFile} onClose={() => setViewMode('dashboard')} />
+        </ErrorBoundary>
       )}
     </div>
   );

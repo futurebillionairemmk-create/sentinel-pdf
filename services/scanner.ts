@@ -168,8 +168,16 @@ export const calculateRiskScore = (vt: VirusTotalResult, heuristics: HeuristicTh
 
   score = Math.min(score, 100);
   let level = RiskLevel.SAFE;
-  if (score > 60) level = RiskLevel.MALICIOUS;
-  else if (score > 25) level = RiskLevel.SUSPICIOUS;
+
+  // Hardened Level Logic: Critical/High threats force at least SUSPICIOUS
+  const hasCritical = heuristics.some(h => h.severity === 'critical');
+  const hasHigh = heuristics.some(h => h.severity === 'high');
+
+  if (score > 50 || hasCritical || vt.positives > 2) {
+    level = RiskLevel.MALICIOUS;
+  } else if (score > 15 || hasHigh || vt.positives > 0) {
+    level = RiskLevel.SUSPICIOUS;
+  }
 
   return { score, level };
 };

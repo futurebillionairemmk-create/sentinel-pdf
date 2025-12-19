@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'unsafe-inline'; img-src data:; connect-src blob:;">
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #020617;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs" type="module"></script>
+</head>
+
+<body>
+    <canvas id="sandbox-canvas"></canvas>
+    <script type="module">
+        import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs';
+
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs';
+
+        window.addEventListener('message', async (event) => {
+            const { type, data, pageNum, scale } = event.data;
+
+            if (type === 'RENDER') {
+                try {
+                    const loadingTask = pdfjsLib.getDocument({ data: data });
+                    const pdf = await loadingTask.promise;
+                    const page = await pdf.getPage(pageNum);
+
+                    const viewport = page.getViewport({ scale });
+                    const canvas = document.getElementById('sandbox-canvas');
+                    const context = canvas.getContext('2d');
+
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    const renderContext = {
+                        canvasContext: context,
+                        viewport: viewport
+                    };
+
+                    await page.render(renderContext).promise;
+
+                    // Notify parent of success
+                    window.parent.postMessage({ type: 'RENDER_SUCCESS', numPages: pdf.numPages }, '*');
+                } catch (error) {
+                    window.parent.postMessage({ type: 'RENDER_ERROR', error: error.message }, '*');
+                }
+            }
+        });
+
+        // Anti-Breakout Check (Verification tool can use this)
+        window.checkBreakout = () => {
+            try {
+                return !!window.parent.document;
+            } catch (e) {
+                return false;
+            }
+        };
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,5 @@
+{
+  "name": "Sentinel PDF",
+  "description": "A high-security, sandboxed PDF viewer with malware scanning, heuristic analysis, and AI-driven threat explanation.",
+  "requestFramePermissions": []
+}

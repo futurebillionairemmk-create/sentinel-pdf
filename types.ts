@@ -11,6 +11,7 @@ export interface HeuristicThreat {
   count: number;
   description: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
+  extractedScripts?: string[]; // Raw JS content if available
 }
 
 export interface VirusTotalResult {
@@ -44,7 +45,6 @@ export interface HistoryItem {
 }
 
 export interface AppConfig {
-  virusTotalApiKey: string;
   useMockMode: boolean;
   autoQuarantineThreshold: number;
 }

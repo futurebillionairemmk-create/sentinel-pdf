@@ -1,9 +1,12 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ShieldCheck, ShieldAlert, Terminal, Info, Hash } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ShieldCheck, ShieldAlert, Terminal, Info, Hash, Download, Loader2 } from 'lucide-react';
+import { sanitizeAndFlatten } from '../services/sanitizer.ts';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.mjs?url';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 interface Props {
   file: File | null;
@@ -18,6 +21,8 @@ export const SecurePDFViewer: React.FC<Props> = ({ file, onClose }) => {
   const [scale, setScale] = useState(1.25);
   const [loading, setLoading] = useState(false);
   const [metadata, setMetadata] = useState<any>(null);
+  const [sanitizing, setSanitizing] = useState(false);
+  const [sanProgress, setSanProgress] = useState(0);
 
   useEffect(() => {
     if (!file) return;
@@ -60,6 +65,25 @@ export const SecurePDFViewer: React.FC<Props> = ({ file, onClose }) => {
       await page.render({ canvasContext: context, viewport }).promise;
     } catch (e) {
       console.error("Render failed", e);
+    }
+  };
+
+  const handleSanitize = async () => {
+    if (!file) return;
+    setSanitizing(true);
+    try {
+      const blob = await sanitizeAndFlatten(file, (p) => setSanProgress(p));
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sanitized_${file.name}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Sanitization failed", err);
+    } finally {
+      setSanitizing(false);
+      setSanProgress(0);
     }
   };
 
@@ -110,8 +134,8 @@ export const SecurePDFViewer: React.FC<Props> = ({ file, onClose }) => {
               <Hash size={14} /> Rapid Navigate
             </h3>
             <form onSubmit={handleJump} className="flex gap-2">
-              <input 
-                type="number" 
+              <input
+                type="number"
                 value={jumpVal}
                 onChange={(e) => setJumpVal(e.target.value)}
                 className="flex-1 bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs font-mono outline-none focus:border-emerald-500"
@@ -120,6 +144,25 @@ export const SecurePDFViewer: React.FC<Props> = ({ file, onClose }) => {
               />
               <button type="submit" className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-[10px] font-bold uppercase rounded border border-slate-700">Jump</button>
             </form>
+          </section>
+
+          <section>
+            <h3 className="text-xs font-bold text-slate-500 uppercase mb-3 flex items-center gap-2">
+              <ShieldCheck size={14} /> Sentinel Neutralizer
+            </h3>
+            <div className="bg-slate-950 rounded-lg p-4 border border-slate-800">
+              <p className="text-[9px] text-slate-500 mb-4 leading-relaxed uppercase tracking-tight">
+                Converts PDF into a 100% flattened image stream. Strips all active payloads.
+              </p>
+              <button
+                onClick={handleSanitize}
+                disabled={sanitizing || !pdfDoc}
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-600 rounded text-[10px] font-black uppercase tracking-[0.15em] flex items-center justify-center gap-2 transition shadow-lg shadow-emerald-600/10"
+              >
+                {sanitizing ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
+                {sanitizing ? `Flattening ${sanProgress}%` : 'Sanitize & Flatten'}
+              </button>
+            </div>
           </section>
 
           <section>
@@ -135,7 +178,7 @@ export const SecurePDFViewer: React.FC<Props> = ({ file, onClose }) => {
             </div>
           </section>
 
-          <button 
+          <button
             onClick={onClose}
             className="w-full py-3 bg-red-900/20 hover:bg-red-900/40 text-red-400 border border-red-900/50 rounded-lg text-sm font-bold transition"
           >
@@ -149,15 +192,15 @@ export const SecurePDFViewer: React.FC<Props> = ({ file, onClose }) => {
         <div className="h-16 bg-slate-900/50 border-b border-slate-800 flex items-center justify-between px-6">
           <div className="flex items-center gap-4">
             <div className="flex bg-slate-950 rounded border border-slate-800 p-1">
-              <button onClick={() => setPageNum(p => Math.max(1, p - 1))} className="p-1 hover:bg-slate-800 rounded text-slate-400"><ChevronLeft size={16}/></button>
+              <button onClick={() => setPageNum(p => Math.max(1, p - 1))} className="p-1 hover:bg-slate-800 rounded text-slate-400"><ChevronLeft size={16} /></button>
               <span className="px-3 text-xs font-mono py-1 min-w-[100px] text-center">PAGE {pageNum} / {pdfDoc?.numPages || '?'}</span>
-              <button onClick={() => setPageNum(p => Math.min(pdfDoc?.numPages || 1, p + 1))} className="p-1 hover:bg-slate-800 rounded text-slate-400"><ChevronRight size={16}/></button>
+              <button onClick={() => setPageNum(p => Math.min(pdfDoc?.numPages || 1, p + 1))} className="p-1 hover:bg-slate-800 rounded text-slate-400"><ChevronRight size={16} /></button>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => setScale(s => Math.max(0.5, s - 0.25))} className="p-2 hover:bg-slate-800 rounded text-slate-400"><ZoomOut size={18}/></button>
+            <button onClick={() => setScale(s => Math.max(0.5, s - 0.25))} className="p-2 hover:bg-slate-800 rounded text-slate-400"><ZoomOut size={18} /></button>
             <span className="text-xs font-mono text-slate-500 w-12 text-center">{Math.round(scale * 100)}%</span>
-            <button onClick={() => setScale(s => Math.min(3, s + 0.25))} className="p-2 hover:bg-slate-800 rounded text-slate-400"><ZoomIn size={18}/></button>
+            <button onClick={() => setScale(s => Math.min(3, s + 0.25))} className="p-2 hover:bg-slate-800 rounded text-slate-400"><ZoomIn size={18} /></button>
           </div>
         </div>
 
@@ -169,13 +212,13 @@ export const SecurePDFViewer: React.FC<Props> = ({ file, onClose }) => {
             </div>
           ) : (
             <div className="shadow-[0_0_100px_rgba(0,0,0,0.8)] border-4 border-slate-800 bg-white">
-               <canvas ref={canvasRef} className="max-w-full h-auto" />
+              <canvas ref={canvasRef} className="max-w-full h-auto" />
             </div>
           )}
         </div>
 
         <div className="absolute bottom-4 right-6 pointer-events-none opacity-20 flex items-center gap-2 font-mono text-xs text-white uppercase tracking-widest">
-           <ShieldAlert size={14} /> Sanitized View Port
+          <ShieldAlert size={14} /> Sanitized View Port
         </div>
       </main>
     </div>

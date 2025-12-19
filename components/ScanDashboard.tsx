@@ -1,9 +1,11 @@
 
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { ScanReport, RiskLevel } from '../types.ts';
-import { ShieldAlert, ShieldCheck, ShieldQuestion, ExternalLink, FileText, Lock, Unlock, Loader2, Cpu, BrainCircuit, AlertCircle, Download } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, ShieldQuestion, ExternalLink, FileText, Lock, Unlock, Loader2, Cpu, BrainCircuit, AlertCircle, Download, ChevronRight } from 'lucide-react';
 import { generateThreatExplanation } from '../services/geminiService.ts';
 import { JSForensicLab } from './JSForensicLab.tsx';
+import clsx from 'clsx';
 
 interface Props {
   report: ScanReport;
@@ -34,196 +36,221 @@ export const ScanDashboard: React.FC<Props> = ({ report, onOpenSafe, onForceOpen
     URL.revokeObjectURL(url);
   };
 
-  const getRiskColor = (level: RiskLevel) => {
-    switch (level) {
-      case RiskLevel.SAFE: return 'text-emerald-400 border-emerald-500/30 bg-emerald-500/5';
-      case RiskLevel.MALICIOUS: return 'text-red-400 border-red-500/30 bg-red-500/5';
-      default: return 'text-amber-400 border-amber-500/30 bg-amber-500/5';
-    }
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-  };
+  const isSafe = localReport.riskLevel === RiskLevel.SAFE;
+  const isMalicious = localReport.riskLevel === RiskLevel.MALICIOUS;
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-slate-900 rounded-2xl border border-slate-700/50 shadow-2xl">
-      {/* Header */}
-      <div className={`p-8 border-b ${getRiskColor(localReport.riskLevel)} flex items-center justify-between transition-colors duration-500`}>
-        <div className="flex items-center gap-6">
-          <div className="p-4 rounded-2xl bg-slate-950/30 backdrop-blur-sm border border-white/10 shadow-inner">
-            {localReport.riskLevel === RiskLevel.SAFE ? <ShieldCheck size={48} /> : localReport.riskLevel === RiskLevel.MALICIOUS ? <ShieldAlert size={48} /> : <ShieldQuestion size={48} />}
-          </div>
-          <div>
-            <h2 className="text-3xl font-black tracking-tighter uppercase leading-none">{localReport.riskLevel}</h2>
-            <p className="text-sm opacity-80 font-mono mt-2 flex items-center gap-2">
-              Score: {Math.round(localReport.score)}/100 • {formatFileSize(localReport.fileSize)} • {localReport.fileName}
-            </p>
-          </div>
-        </div>
-        <div className="hidden md:flex flex-col items-end gap-3">
-          <div className="text-right">
-            <div className="text-[10px] font-black opacity-50 mb-1 tracking-widest uppercase">Target Hash (SHA-256)</div>
-            <div className="font-mono text-[10px] bg-slate-950/50 px-3 py-1 rounded border border-white/5 select-all">
-              {localReport.hash}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="bg-surface/80 backdrop-blur-2xl rounded-4xl border border-white/5 overflow-hidden shadow-2xl pb-12"
+    >
+      {/* Header Banner */}
+      <div className={clsx(
+        "relative p-10 overflow-hidden",
+        isSafe ? "bg-emerald-500/5" : isMalicious ? "bg-red-500/5" : "bg-amber-500/5"
+      )}>
+        {/* Glow Effects */}
+        <div className={clsx("absolute top-0 right-0 w-96 h-96 rounded-full blur-[100px] opacity-20 transform translate-x-1/2 -translate-y-1/2",
+          isSafe ? "bg-emerald-500" : isMalicious ? "bg-red-500" : "bg-amber-500"
+        )} />
+
+        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="flex items-center gap-6">
+            <div className={clsx(
+              "p-4 rounded-3xl backdrop-blur-md border shadow-lg",
+              isSafe ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" :
+                isMalicious ? "bg-red-500/10 border-red-500/20 text-red-500" :
+                  "bg-amber-500/10 border-amber-500/20 text-amber-500"
+            )}>
+              {isSafe ? <ShieldCheck size={40} /> : isMalicious ? <ShieldAlert size={40} /> : <ShieldQuestion size={40} />}
+            </div>
+            <div>
+              <h2 className="text-4xl font-bold tracking-tight mb-2">{localReport.riskLevel}</h2>
+              <div className="flex items-center gap-3 text-sm font-medium text-text-secondary">
+                <span className="px-2 py-0.5 rounded bg-white/5 border border-white/5">Score: {Math.round(localReport.score)}</span>
+                <span>•</span>
+                <span>{localReport.fileName}</span>
+              </div>
             </div>
           </div>
-          <button
-            onClick={handleExport}
-            className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded transition text-slate-300"
-          >
-            <Download size={12} /> Export Report
-          </button>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleExport}
+              className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-2"
+            >
+              <Download size={14} /> JSON Export
+            </button>
+            <div className="px-4 py-2 rounded-xl bg-surface border border-white/5 text-[10px] font-mono text-text-secondary select-all">
+              HASH: {localReport.hash.slice(0, 12)}...
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-8 grid grid-cols-1 lg:grid-cols-3 gap-8 custom-scroll">
+      <div className="p-4 md:p-10 flex flex-col gap-8">
 
-        <div className="lg:col-span-2 space-y-6">
-          {localReport.fileSize > 50 * 1024 * 1024 && (
-            <div className="bg-amber-900/20 border border-amber-500/30 rounded-lg p-4 flex items-center gap-3 text-amber-500">
-              <AlertCircle size={20} />
-              <p className="text-xs font-bold uppercase tracking-wide leading-tight">Heavy Payload Detected: Static analysis scanning deep layers. Viewing performance may be degraded.</p>
-            </div>
-          )}
+        {/* Top Grid: Analysis & Governance */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
 
-          {/* AI Analysis Section */}
-          <div className="bg-slate-950/40 rounded-xl p-6 border border-slate-800 shadow-inner">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-indigo-400">
-                <BrainCircuit size={16} /> Gemini Threat Synthesis
-              </h3>
-              {!localReport.aiAnalysis && (
-                <button
-                  onClick={handleAiAnalysis}
-                  disabled={analyzingAi}
-                  className="text-[10px] font-bold bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded transition flex items-center gap-2 disabled:opacity-50 uppercase tracking-widest shadow-lg shadow-indigo-500/20"
-                >
-                  {analyzingAi ? <Loader2 className="animate-spin" size={12} /> : <Cpu size={12} />}
-                  Request AI Scan
-                </button>
-              )}
-            </div>
-            <div className="text-xs text-slate-300 leading-relaxed font-mono bg-slate-950 p-4 rounded-lg border border-slate-800 min-h-[80px]">
-              {analyzingAi ? (
-                <span className="flex items-center gap-2 text-indigo-400 animate-pulse uppercase text-[10px]">
-                  &gt; Syncing with Sentinel Intelligence Node...
-                </span>
-              ) : localReport.aiAnalysis ? (
-                <div className="whitespace-pre-line leading-relaxed italic border-l-2 border-indigo-500/50 pl-4">{localReport.aiAnalysis}</div>
-              ) : (
-                <span className="opacity-30 italic text-[10px]">&gt; No automated synthesis requested. Data remains raw.</span>
-              )}
-            </div>
-          </div>
+          {/* Left Column: Intelligence Core */}
+          <div className="lg:col-span-2 flex flex-col gap-8">
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-slate-950/40 rounded-xl p-6 border border-slate-800">
-              <h3 className="text-xs font-black uppercase tracking-widest mb-4 flex items-center gap-2 text-slate-400">
-                <FileText size={16} /> Heuristic Anomalies
-              </h3>
-              {localReport.heuristics.length === 0 ? (
-                <div className="text-emerald-500 text-[10px] font-mono p-4 bg-emerald-500/5 rounded border border-emerald-500/20">
-                  [+] 0 Anomalies found. Structure conforms to standard PDF specifications.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {localReport.heuristics.map((h, idx) => (
-                    <div key={idx} className="flex flex-col bg-slate-950 p-3 rounded-lg border border-slate-800">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-[10px] font-black uppercase text-slate-200">{h.type}</span>
-                        <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded ${h.severity === 'critical' ? 'bg-red-500/20 text-red-500' : 'bg-slate-800 text-slate-400'}`}>{h.severity}</span>
-                      </div>
-                      <div className="text-[9px] text-slate-500 font-mono italic leading-tight">{h.description}</div>
-                      <div className="mt-2 text-[9px] font-black text-emerald-500/50 uppercase">Instances: {h.count}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            {/* AI Threat Engine */}
+            <div className="p-8 rounded-3xl bg-surfaceHighlight/30 border border-white/5 relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent-primary to-accent-secondary opacity-50" />
 
-            <div className="bg-slate-950/40 rounded-xl p-6 border border-slate-800 flex flex-col">
-              <h3 className="text-xs font-black uppercase tracking-widest mb-4 flex items-center gap-2 text-slate-400">
-                <ExternalLink size={16} /> Reputation Cloud
-              </h3>
-              <div className="flex-1 flex flex-col justify-center">
-                <div className="flex items-end justify-between mb-4">
-                  <div>
-                    <div className={`text-4xl font-black ${localReport.virusTotal.positives > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
-                      {localReport.virusTotal.positives}
-                    </div>
-                    <div className="text-[9px] text-slate-500 uppercase font-black">Malicious Flag</div>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-sm font-bold uppercase tracking-wider flex items-center gap-2 text-accent-primary">
+                  <BrainCircuit size={18} /> Gemini Threat Engine
+                </h3>
+                {!localReport.aiAnalysis && (
+                  <button
+                    onClick={handleAiAnalysis}
+                    disabled={analyzingAi}
+                    className="px-4 py-2 rounded-lg bg-accent-primary text-white text-xs font-bold hover:bg-accent-primary/90 transition-colors flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {analyzingAi ? <Loader2 className="animate-spin" size={14} /> : <Cpu size={14} />}
+                    Ignite Synthesis
+                  </button>
+                )}
+              </div>
+
+              <div className="min-h-[100px] text-sm leading-relaxed text-text-secondary/80 font-mono">
+                {analyzingAi ? (
+                  <div className="flex items-center gap-3 text-accent-primary animate-pulse">
+                    <div className="w-2 h-2 rounded-full bg-accent-primary" />
+                    Connecting to neural interface...
                   </div>
-                  <div className="text-right">
-                    <div className="text-4xl font-black text-slate-700">/{localReport.virusTotal.total || '0'}</div>
-                    <div className="text-[9px] text-slate-500 uppercase font-black">Scanning Vendors</div>
-                  </div>
-                </div>
-                {localReport.virusTotal.permalink ? (
-                  <a href={localReport.virusTotal.permalink} target="_blank" className="text-[9px] text-center p-2 bg-slate-900 border border-slate-800 text-emerald-500 hover:text-emerald-400 font-black uppercase transition-colors rounded">
-                    View Complete VT Forensic Profile
-                  </a>
+                ) : localReport.aiAnalysis ? (
+                  <div className="whitespace-pre-line pl-4 border-l-2 border-accent-primary/20">{localReport.aiAnalysis}</div>
                 ) : (
-                  <div className="text-[9px] text-slate-600 italic font-mono p-2 bg-slate-950 rounded border border-slate-800 text-center uppercase tracking-tighter">
-                    No global reputation data available.
+                  <div className="flex flex-col items-center justify-center py-8 text-center opacity-40">
+                    <BrainCircuit size={32} className="mb-2" />
+                    <p>No AI synthesis active. Request logic core activation.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Heuristics & Reputation Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
+              <div className="p-6 rounded-3xl bg-surfaceHighlight/20 border border-white/5 h-full">
+                <h4 className="text-xs font-bold uppercase text-text-secondary mb-6 flex items-center gap-2">
+                  <FileText size={14} /> Static Heuristics
+                </h4>
+
+                {localReport.heuristics.length === 0 ? (
+                  <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-500 text-xs font-medium flex items-center gap-2">
+                    <ShieldCheck size={14} /> Zero Anomalies Detected
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {localReport.heuristics.map((h, i) => (
+                      <div key={i} className="p-3 rounded-xl bg-surface border border-white/5 hover:border-white/10 transition-colors">
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="text-xs font-bold text-white uppercase">{h.type}</span>
+                          <span className={clsx(
+                            "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase",
+                            h.severity === 'critical' ? "bg-red-500 text-white" : "bg-white/10 text-text-secondary"
+                          )}>{h.severity}</span>
+                        </div>
+                        <p className="text-[10px] text-text-secondary leading-normal">{h.description}</p>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
 
-              {/* JS Forensic Lab Section */}
-              {localReport.heuristics.some(h => h.extractedScripts && h.extractedScripts.length > 0) && (
-                <div className="mt-8">
-                  <h3 className="text-xs font-black uppercase tracking-widest mb-4 flex items-center gap-2 text-indigo-400">
-                    <FileText size={16} /> Javascript Deep Inspection
-                  </h3>
-                  <JSForensicLab
-                    scripts={localReport.heuristics.flatMap(h => h.extractedScripts || [])}
-                  />
-                </div>
-              )}
-            </div>
+              <div className="p-6 rounded-3xl bg-surfaceHighlight/20 border border-white/5 flex flex-col h-full">
+                <h4 className="text-xs font-bold uppercase text-text-secondary mb-6 flex items-center gap-2">
+                  <ExternalLink size={14} /> Global Reputation
+                </h4>
 
-            {/* Right Col: Actions */}
-            <div className="flex flex-col gap-4">
-              <div className="bg-slate-950/40 rounded-xl p-6 border border-slate-800 h-full flex flex-col justify-between shadow-2xl">
-                <div>
-                  <h3 className="text-xs font-black uppercase tracking-widest mb-3 text-slate-400">Governance Decision</h3>
-                  <p className="text-[10px] text-slate-500 mb-8 leading-relaxed font-medium">
-                    {localReport.isLocked
-                      ? "CORE BLOCK: Automated quarantine enforced. High probability of file-based code execution. External viewing prohibited."
-                      : "CORE PERMIT: Document within risk profile. Direct DOM rendering remains restricted, raster isolation recommended."}
-                  </p>
-
-                  <div className={`flex items-center justify-center p-10 rounded-full bg-slate-900 border-4 border-double w-32 h-32 mx-auto mb-10 transition-all duration-700
-                  ${localReport.isLocked ? 'border-red-900/50 text-red-600 shadow-[0_0_40px_rgba(220,38,38,0.2)]' : 'border-emerald-900/50 text-emerald-600'}`}>
-                    {localReport.isLocked ? <Lock size={48} /> : <Unlock size={48} />}
+                <div className="flex-1 flex flex-col items-center justify-center text-center">
+                  <div className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50 mb-2">
+                    {localReport.virusTotal.positives} <span className="text-lg text-text-secondary font-medium">/ {localReport.virusTotal.total || 0}</span>
                   </div>
-                </div>
+                  <p className="text-xs text-text-secondary uppercase tracking-widest font-bold mb-6">Vendor Flags</p>
 
-                <div className="space-y-3">
-                  <button
-                    onClick={onOpenSafe}
-                    disabled={localReport.isLocked}
-                    className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed text-slate-950 rounded-lg font-black text-xs transition-all uppercase tracking-[0.2em] flex items-center justify-center gap-2 shadow-xl shadow-emerald-600/10"
-                  >
-                    <ShieldCheck size={16} /> Enter Sandbox
-                  </button>
-
-                  {localReport.isLocked && (
-                    <button
-                      onClick={onForceOpen}
-                      className="w-full py-4 bg-transparent border border-red-900/50 text-red-500 hover:bg-red-900/10 rounded-lg font-black text-[10px] transition uppercase tracking-widest flex items-center justify-center gap-2"
+                  {localReport.virusTotal.permalink ? (
+                    <a
+                      href={localReport.virusTotal.permalink}
+                      target="_blank"
+                      className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-bold transition-colors flex items-center gap-2"
                     >
-                      <ShieldAlert size={14} /> Force Unsafe Override
-                    </button>
+                      View on VirusTotal <ChevronRight size={12} />
+                    </a>
+                  ) : (
+                    <span className="text-[10px] opacity-50">Local Analysis Only</span>
                   )}
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Right Column: Governance (Matches Height) */}
+          <div className="space-y-6 h-full">
+            <div className="p-8 rounded-4xl bg-surface border border-white/5 h-full flex flex-col shadow-xl">
+              <div className="flex-1">
+                <h3 className="text-xs font-bold text-text-secondary uppercase tracking-widest mb-6">Governance Protocol</h3>
+
+                <div className="relative w-40 h-40 mx-auto flex items-center justify-center mb-8">
+                  <div className={clsx("absolute inset-0 rounded-full blur-[40px] opacity-20",
+                    localReport.isLocked ? "bg-red-500" : "bg-emerald-500"
+                  )} />
+                  <div className={clsx("relative z-10 p-8 rounded-full border-4 text-white",
+                    localReport.isLocked ? "border-red-500 bg-red-500/10" : "border-emerald-500 bg-emerald-500/10"
+                  )}>
+                    {localReport.isLocked ? <Lock size={40} /> : <Unlock size={40} />}
+                  </div>
+                </div>
+
+                <p className="text-sm text-center text-text-secondary leading-relaxed mb-8">
+                  {localReport.isLocked
+                    ? "File has triggered the auto-quarantine threshold. Direct rendering is strictly prohibited due to high risk factors."
+                    : "File is within acceptable risk parameters. Sentinel Sandbox is ready for isolated rendering."}
+                </p>
+              </div>
+
+              <div className="space-y-4 pt-4 border-t border-white/5">
+                <button
+                  onClick={onOpenSafe}
+                  disabled={localReport.isLocked}
+                  className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:grayscale transition-all flex items-center justify-center gap-2 group"
+                >
+                  <ShieldCheck className="group-hover:scale-110 transition-transform" size={18} />
+                  ENTER SANDBOX
+                </button>
+
+                {localReport.isLocked && (
+                  <button
+                    onClick={onForceOpen}
+                    className="w-full py-4 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 font-bold text-xs transition-colors"
+                  >
+                    OVERRIDE & FORCE OPEN
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Bottom Section: Full Width Forensic Lab */}
+        {localReport.heuristics.some(h => h.extractedScripts && h.extractedScripts.length > 0) && (
+          <div className="w-full">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="h-px bg-white/10 flex-1" />
+              <span className="text-xs font-bold text-text-secondary uppercase tracking-widest flex items-center gap-2">
+                <FileText size={14} /> Javascript Deep Inspection Layer
+              </span>
+              <div className="h-px bg-white/10 flex-1" />
+            </div>
+            <JSForensicLab scripts={localReport.heuristics.flatMap(h => h.extractedScripts || [])} />
+          </div>
+        )}
       </div>
-    </div>
+    </motion.div>
   );
 };

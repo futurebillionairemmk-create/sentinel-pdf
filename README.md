@@ -12,9 +12,9 @@ Sentinel PDF is a security-focused tool designed to analyze, sanitize, and neutr
 - **Sanitize & Flatten**: Converts dynamic PDF content into a safe, flattened image stream, stripping all active payloads.
 
 ### 🧠 JS Forensic Lab
-- **Heuristic Scanning**: scours PDF structure for suspicious elements (OpenAction, AA, JS).
+- **Heuristic Scanning**: Scours PDF structure for suspicious elements (OpenAction, AA, JS).
 - **Script Extraction**: Automatically extracts hidden JavaScript for inspection.
-- **AI Analysis**: Integrates with Google Gemini to de-obfuscate and warn about malicious code snippets.
+- **AI Analysis**: Integrates with **Google Gemini 1.5 Pro** to de-obfuscate and warn about malicious code snippets in plain English.
 
 ### 🌐 Cloud Intelligence
 - **VirusTotal Integration**: Checks file hashes against the VirusTotal database for known threats.
@@ -30,7 +30,7 @@ Sentinel PDF is a security-focused tool designed to analyze, sanitize, and neutr
 
 1.  **Clone the repository**
     ```bash
-    git clone https://github.com/fbmmk/sentinel-pdf.git
+    git clone https://github.com/futurebillionairemmk-create/sentinel-pdf.git
     cd sentinel-pdf
     ```
 
@@ -42,7 +42,8 @@ Sentinel PDF is a security-focused tool designed to analyze, sanitize, and neutr
 3.  **Environment Setup**
     Create a `.env` file in the root directory:
     ```env
-    GEMINI_API_KEY=your_api_key_here
+    VITE_GEMINI_API_KEY=your_api_key_here
+    VITE_VIRUSTOTAL_API_KEY=your_vt_key
     ```
 
 4.  **Run Development Server**
@@ -54,11 +55,11 @@ Sentinel PDF is a security-focused tool designed to analyze, sanitize, and neutr
 
 - **Frontend**: React + Vite + TypeScript
 - **PDF Core**: PDF.js (Custom Worker Implementation)
-- **Styling**: TailwindCSS (via Utility Classes)
+- **Styling**: TailwindCSS (Premium "Antigravity" Dark Theme)
 - **Security**:
     - `vite-env.d.ts` for safe type definitions.
-    - `sandbox.html` for isolated rendering.
-    - `sanitizer.ts` for flattening logic.
+    - `sandbox.html` for isolated rendering/flattening.
+    - `SecurityContext` for managing strict CSP and Headers.
 
 ## 📝 License
 

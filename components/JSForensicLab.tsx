@@ -46,34 +46,34 @@ export const JSForensicLab: React.FC<Props> = ({ scripts }) => {
                 </div>
             </div>
 
-            <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
                 {/* Code Area */}
-                <div className="flex-1 flex flex-col border-r border-slate-800">
+                <div className="flex-1 flex flex-col border-b md:border-b-0 md:border-r border-slate-800 min-w-0 relative h-[300px] md:h-auto">
                     <div className="flex-1 overflow-auto p-4 font-mono text-xs text-indigo-300 selection:bg-indigo-500/30">
-                        <pre className="whitespace-pre-wrap">{scripts[selectedIdx]}</pre>
+                        <pre className="whitespace-pre-wrap break-all">{scripts[selectedIdx]}</pre>
                     </div>
-                    <div className="p-3 bg-slate-900 flex justify-between items-center border-t border-slate-800">
+                    <div className="p-4 bg-slate-900/90 backdrop-blur flex justify-between items-center border-t border-slate-800 shrink-0">
                         <button
                             onClick={copyToClipboard}
-                            className="text-[9px] font-bold uppercase text-slate-500 hover:text-white flex items-center gap-1.5 transition"
+                            className="text-[10px] font-bold uppercase text-slate-500 hover:text-white flex items-center gap-2 transition whitespace-nowrap"
                         >
-                            {copied ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
-                            {copied ? 'Copied' : 'Copy Source'}
+                            {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                            {copied ? 'Copied' : 'Copy'}
                         </button>
                         <button
                             onClick={handleAnalyze}
                             disabled={analyzing}
-                            className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition shadow-lg shadow-indigo-600/20 disabled:opacity-50"
+                            className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition shadow-lg shadow-indigo-600/20 disabled:opacity-50 whitespace-nowrap ml-4"
                         >
-                            {analyzing ? <Loader2 size={12} className="animate-spin" /> : <Cpu size={12} />}
+                            {analyzing ? <Loader2 size={14} className="animate-spin" /> : <Cpu size={14} />}
                             {analysis[selectedIdx] ? 'Re-Analyze' : 'AI Analysis'}
                         </button>
                     </div>
                 </div>
 
                 {/* Analysis Area */}
-                <div className="w-80 bg-slate-900/50 overflow-auto p-6 flex flex-col">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-4 flex items-center gap-2">
+                <div className="w-full md:w-80 bg-slate-900/50 overflow-auto p-6 flex flex-col h-[200px] md:h-auto border-t md:border-t-0 border-slate-800">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-4 flex items-center gap-2 shrink-0">
                         <AlertTriangle size={12} className="text-amber-500" /> Sentinel Insight
                     </h4>
 

@@ -1,45 +1,97 @@
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- Content Security Policy: Hardening the sandbox while allowing required CDNs -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://aistudiocdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; worker-src blob:; connect-src 'self' https://*.google.com https://*.googleapis.com https://*.virustotal.com https://aistudiocdn.com; img-src 'self' data: https://www.transparenttextures.com;">
-    
-    <title>Sentinel PDF | Secure Sandbox</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-              mono: ['JetBrains Mono', 'monospace'],
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Content Security Policy: Hardening the sandbox while allowing required CDNs -->
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://aistudiocdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; worker-src blob:; connect-src 'self' https://*.google.com https://*.googleapis.com https://*.virustotal.com https://aistudiocdn.com; img-src 'self' data: https://www.transparenttextures.com;">
+
+  <title>Sentinel PDF | Secure Sandbox</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            background: '#0B0C0E',
+            surface: '#151719',
+            surfaceHighlight: '#1E2124',
+            accent: {
+              primary: '#A142F4', // Electric Purple
+              secondary: '#4285F4', // Google Blue
             },
-            colors: {
-              slate: {
-                850: '#1f2937',
-                900: '#0f172a',
-                950: '#020617',
-              }
+            text: {
+              primary: '#FFFFFF',
+              secondary: '#9CA3AF',
+            }
+          },
+          borderRadius: {
+            '4xl': '2rem',
+            '5xl': '2.5rem',
+          },
+          animation: {
+            'float': 'float 6s ease-in-out infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-10px)' },
             }
           }
         }
       }
-    </script>
-    <style>
-      .custom-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
-      .custom-scroll::-webkit-scrollbar-track { background: #1e293b; }
-      .custom-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
-      .custom-scroll::-webkit-scrollbar-thumb:hover { background: #64748b; }
-      
-      @keyframes loading {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
-      }
-    </style>
+    }
+  </script>
+  <style>
+    html.lenis,
+    html.lenis body {
+      height: auto;
+    }
+
+    .lenis.lenis-smooth {
+      scroll-behavior: auto !important;
+    }
+
+    .lenis.lenis-smooth [data-lenis-prevent] {
+      overscroll-behavior: contain;
+    }
+
+    .lenis.lenis-stopped {
+      overflow: hidden;
+    }
+
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .custom-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #374151;
+      border-radius: 10px;
+    }
+
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #4b5563;
+    }
+
+    body {
+      background-color: #0B0C0E;
+      color: #FFFFFF;
+      overflow-x: hidden;
+    }
+  </style>
   <script type="importmap">
 {
   "imports": {
@@ -55,8 +107,10 @@
 }
 </script>
 </head>
-  <body class="bg-slate-950 text-slate-200 antialiased overflow-hidden">
-    <div id="root"></div>
-    <script type="module" src="./index.tsx"></script>
-  </body>
+
+<body class="bg-slate-950 text-slate-200 antialiased overflow-hidden">
+  <div id="root"></div>
+  <script type="module" src="./index.tsx"></script>
+</body>
+
 </html>

@@ -181,7 +181,7 @@ export const SecurePDFViewer: React.FC<Props> = ({ file, onClose }) => {
                 className="block border-none"
                 width={800 * scale}
                 height={1132 * scale} // Approx A4 ratio
-                sandbox="allow-scripts"
+                sandbox="allow-scripts allow-same-origin"
                 title="Ghost-Protocol Sandbox"
               />
             </motion.div>

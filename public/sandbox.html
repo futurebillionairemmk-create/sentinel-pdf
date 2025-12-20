@@ -34,6 +34,7 @@
 
         // Disable worker for maximum security (null origin can't load external scripts)
         // This runs PDF.js on the main thread - slightly slower but fully isolated
+        // In PDF.js 4.x, we must set workerSrc to empty AND use isEvalSupported/useWorkerFetch flags
         pdfjsLib.GlobalWorkerOptions.workerSrc = '';
 
         window.addEventListener('message', async (event) => {
@@ -41,8 +42,16 @@
 
             if (type === 'RENDER') {
                 try {
-                    // Explicitly disable worker in document loading
-                    const loadingTask = pdfjsLib.getDocument({ data: data, disableWorker: true });
+                    // PDF.js 4.x requires these flags to properly disable worker loading
+                    // useWorkerFetch: false - prevents network requests for worker
+                    // isEvalSupported: false - disables eval-based code execution
+                    const loadingTask = pdfjsLib.getDocument({ 
+                        data: data, 
+                        useWorkerFetch: false,
+                        isEvalSupported: false,
+                        disableAutoFetch: true,
+                        disableStream: true
+                    });
                     const pdf = await loadingTask.promise;
                     const page = await pdf.getPage(pageNum);
 

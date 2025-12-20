@@ -32,8 +32,9 @@ export const SecurePDFViewer: React.FC<Props> = ({ file, onClose }) => {
       try {
         const arrayBuffer = await file.arrayBuffer();
         setFileBuffer(arrayBuffer);
+        // Create a copy for the local viewer so the original isn't detached/neutered
         const doc = await pdfjsLib.getDocument({
-          data: arrayBuffer,
+          data: arrayBuffer.slice(0),
           disableFontFace: true,
           isEvalSupported: false,
           stopAtErrors: true,

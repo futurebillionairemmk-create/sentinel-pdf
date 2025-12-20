@@ -4,22 +4,24 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy"
-        content="default-src 'none'; script-src 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'unsafe-inline'; img-src data:; connect-src blob:; worker-src blob: https://cdnjs.cloudflare.com;">
+        content="default-src 'none'; script-src 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'unsafe-inline'; img-src data:; connect-src blob:; worker-src blob: 'self';">
     <style>
         body,
         html {
             margin: 0;
             padding: 0;
-            overflow: hidden;
+            overflow: auto;
+            /* Allow scrolling if needed */
             background: #020617;
+            height: 100%;
+            width: 100%;
         }
 
         canvas {
-            max-width: 100%;
-            height: auto;
             display: block;
             margin: 0 auto;
             box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            /* Remove max-width/height constraints that might squeeze */
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs" type="module"></script>
@@ -30,7 +32,8 @@
     <script type="module">
         import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs';
 
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs';
+        // Use local worker to avoid CORS/Redirect issues
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
         window.addEventListener('message', async (event) => {
             const { type, data, pageNum, scale } = event.data;

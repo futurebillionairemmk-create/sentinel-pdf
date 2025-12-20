@@ -50,12 +50,23 @@ export const SecurePDFViewer: React.FC<Props> = ({ file, onClose }) => {
     loadPdf();
   }, [file]);
 
+  const [isSandboxReady, setSandboxReady] = useState(false);
+
   useEffect(() => {
-    if (fileBuffer && iframeRef.current) {
-      // Small delay to ensure iframe is ready
-      setTimeout(renderPage, 100);
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'SANDBOX_READY') {
+        setSandboxReady(true);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  useEffect(() => {
+    if (fileBuffer && iframeRef.current && isSandboxReady && !loading) {
+      renderPage();
     }
-  }, [fileBuffer, pageNum, scale]);
+  }, [fileBuffer, pageNum, scale, isSandboxReady, loading]);
 
   const renderPage = () => {
     if (!fileBuffer || !iframeRef.current || !iframeRef.current.contentWindow) return;

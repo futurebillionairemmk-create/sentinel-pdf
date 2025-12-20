@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy"
-        content="default-src 'none'; script-src 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'unsafe-inline'; img-src data:; connect-src blob:; worker-src https://cdnjs.cloudflare.com;">
+        content="default-src 'none'; script-src 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'unsafe-inline'; img-src data:; connect-src blob:; worker-src blob: https://cdnjs.cloudflare.com;">
     <style>
         body,
         html {
@@ -63,7 +63,7 @@
             }
         });
 
-        // Anti-Breakout Check (Verification tool can use this)
+        // Anti-Breakout Check
         window.checkBreakout = () => {
             try {
                 return !!window.parent.document;
@@ -71,6 +71,9 @@
                 return false;
             }
         };
+
+        // Notify parent that sandbox is ready to receive commands
+        window.parent.postMessage({ type: 'SANDBOX_READY' }, '*');
     </script>
 </body>
 

@@ -32,15 +32,17 @@
     <script type="module">
         import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs';
 
-        // Use local worker to avoid CORS/Redirect issues
-        pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+        // Disable worker for maximum security (null origin can't load external scripts)
+        // This runs PDF.js on the main thread - slightly slower but fully isolated
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '';
 
         window.addEventListener('message', async (event) => {
             const { type, data, pageNum, scale } = event.data;
 
             if (type === 'RENDER') {
                 try {
-                    const loadingTask = pdfjsLib.getDocument({ data: data });
+                    // Explicitly disable worker in document loading
+                    const loadingTask = pdfjsLib.getDocument({ data: data, disableWorker: true });
                     const pdf = await loadingTask.promise;
                     const page = await pdf.getPage(pageNum);
 

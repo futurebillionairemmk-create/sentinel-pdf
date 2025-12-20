@@ -58,8 +58,13 @@
 
                     await page.render(renderContext).promise;
 
-                    // Notify parent of success
-                    window.parent.postMessage({ type: 'RENDER_SUCCESS', numPages: pdf.numPages }, '*');
+                    // Notify parent of success with dimensions
+                    window.parent.postMessage({
+                        type: 'RENDER_SUCCESS',
+                        numPages: pdf.numPages,
+                        width: canvas.width,
+                        height: canvas.height
+                    }, '*');
                 } catch (error) {
                     window.parent.postMessage({ type: 'RENDER_ERROR', error: error.message }, '*');
                 }

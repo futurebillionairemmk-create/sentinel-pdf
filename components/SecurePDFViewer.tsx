@@ -51,11 +51,15 @@ export const SecurePDFViewer: React.FC<Props> = ({ file, onClose }) => {
   }, [file]);
 
   const [isSandboxReady, setSandboxReady] = useState(false);
+  const [iframeDimensions, setIframeDimensions] = useState({ width: 800, height: 1132 });
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === 'SANDBOX_READY') {
         setSandboxReady(true);
+      }
+      if (event.data?.type === 'RENDER_SUCCESS' && event.data.width && event.data.height) {
+        setIframeDimensions({ width: event.data.width, height: event.data.height });
       }
     };
     window.addEventListener('message', handleMessage);
@@ -179,8 +183,8 @@ export const SecurePDFViewer: React.FC<Props> = ({ file, onClose }) => {
                 ref={iframeRef}
                 src="/sandbox.html"
                 className="block border-none"
-                width={800 * scale}
-                height={1132 * scale} // Approx A4 ratio
+                width={iframeDimensions.width}
+                height={iframeDimensions.height}
                 sandbox="allow-scripts allow-same-origin"
                 title="Ghost-Protocol Sandbox"
               />

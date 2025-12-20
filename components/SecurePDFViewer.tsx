@@ -185,7 +185,7 @@ export const SecurePDFViewer: React.FC<Props> = ({ file, onClose }) => {
                 className="block border-none"
                 width={iframeDimensions.width}
                 height={iframeDimensions.height}
-                sandbox="allow-scripts allow-same-origin"
+                sandbox="allow-scripts"
                 title="Ghost-Protocol Sandbox"
               />
             </motion.div>
